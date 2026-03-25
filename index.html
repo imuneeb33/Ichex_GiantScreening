@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iChex — SMB Onboarding Prototype v3</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f0f0ec;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px}
+.proto-wrap{width:100%;max-width:720px}
+.proto-label{font-size:11px;font-weight:600;letter-spacing:0.08em;color:#888;text-transform:uppercase;margin-bottom:12px;text-align:center}
+.proto-shell{background:#e8e8e4;border-radius:16px;padding:16px}
+.bb{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:8px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.bd{display:flex;gap:5px}
+.bdo{width:10px;height:10px;border-radius:50%}
+.bdo-r{background:#FF5F57}.bdo-y{background:#FFBD2E}.bdo-g{background:#28C840}
+.burl{flex:1;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:6px;padding:4px 10px;font-size:11px;color:#999;text-align:center}
+.scr{display:none;background:#fff;border-radius:10px;border:1px solid #e5e5e5;overflow:hidden;min-height:500px}
+.scr.on{display:block}
+
+/* Breadcrumb progress bar */
+.pgb{display:flex;align-items:center;padding:12px 20px;border-bottom:1px solid #f0f0f0;overflow-x:auto;gap:0;background:#fafafa}
+.ps{font-size:10px;font-weight:500;color:#bbb;white-space:nowrap;cursor:default;padding:4px 6px;border-radius:4px;transition:all 0.15s}
+.ps.dn{color:#1D9E75;font-weight:600}
+.ps.ac{color:#085041;font-weight:700;background:#E1F5EE}
+.ps.dn:hover{background:#E1F5EE;cursor:pointer}
+.pl{flex:1;height:1px;background:#e0e0e0;margin:0 2px;min-width:6px}
+.pl.dn{background:#1D9E75}
+
+.bd2{padding:28px 32px}
+.bd2.cx{display:flex;flex-direction:column;align-items:center;text-align:center}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:13px 20px;border-bottom:1px solid #f0f0f0}
+.logo{font-size:15px;font-weight:700;color:#111;letter-spacing:-0.3px}
+.logo b{color:#1D9E75;font-weight:700}
+.nlk{display:flex;gap:14px}
+.nl{font-size:12px;color:#888;cursor:pointer}
+.nl.act{font-weight:600;color:#111}
+.h1{font-size:23px;font-weight:700;color:#111;line-height:1.25;margin-bottom:7px}
+.h2{font-size:16px;font-weight:600;color:#111;margin-bottom:5px}
+.sub{font-size:13px;color:#666;line-height:1.55;margin-bottom:20px}
+.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;width:100%;margin-bottom:7px}
+.pc{padding:16px 13px;border:1px solid #e0e0e0;border-radius:12px;cursor:pointer;transition:all 0.15s;background:#fff}
+.pc:hover,.pc.sel{border-color:#1D9E75;background:#E1F5EE}
+.pc.sel{border-width:2px}
+.pi{font-size:18px;margin-bottom:7px}
+.pt{font-size:13px;font-weight:600;color:#111;margin-bottom:2px}
+.pd{font-size:11px;color:#888;line-height:1.35}
+
+/* Location bar */
+.lbar{display:flex;align-items:center;justify-content:space-between;background:#f8f8f8;border:1px solid #e8e8e8;border-radius:8px;padding:8px 13px;margin-bottom:18px;font-size:12px}
+.lbar-l{color:#666}
+.lbar-l strong{color:#111}
+.lbar-c{font-size:11px;color:#1D9E75;cursor:pointer;font-weight:600;text-decoration:underline}
+
+.si{width:100%;padding:10px 13px;font-size:13px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#111;outline:none;margin-bottom:5px}
+.si:focus{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,0.1)}
+.sres{width:100%;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;margin-top:2px}
+.sr{padding:10px 14px;font-size:13px;color:#111;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:#fff;border-bottom:1px solid #f5f5f5}
+.sr:last-child{border-bottom:none}
+.sr:hover{background:#f8f8f8}
+.rt{font-size:11px;color:#085041;background:#E1F5EE;padding:2px 8px;border-radius:9px;font-weight:600}
+.hid{display:none}
+
+.fg{margin-bottom:13px;width:100%}
+.fl{font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block}
+.fi{width:100%;padding:10px 13px;font-size:13px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#111;outline:none}
+.fi:focus{border-color:#1D9E75}
+.fsel{width:100%;padding:10px 13px;font-size:13px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#111;outline:none}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:11px;width:100%}
+
+/* Candidate note */
+.cn{background:#EAF4FF;border-radius:8px;padding:10px 13px;font-size:12px;color:#1a5276;margin-bottom:13px;line-height:1.55;border-left:3px solid #3498db}
+
+/* Package */
+.pbadge{display:inline-flex;font-size:11px;font-weight:600;background:#E1F5EE;color:#085041;padding:3px 10px;border-radius:10px;margin-bottom:12px}
+.pkc{width:100%;border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;margin-bottom:9px}
+.pkh{padding:12px 15px;background:#f8f8f8;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f0f0f0}
+.pkt{font-size:13px;font-weight:600;color:#111}
+.pkp{font-size:20px;font-weight:700;color:#085041}
+.pki{padding:10px 15px;display:flex;flex-direction:column;gap:9px}
+.ci{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.ck-n{color:#111;display:flex;align-items:center;gap:7px}
+.ck-p{font-size:12px;color:#999}
+.tw{display:flex;align-items:center;gap:10px}
+.tg{width:34px;height:19px;border-radius:10px;background:#1D9E75;cursor:pointer;position:relative;transition:background 0.15s;flex-shrink:0}
+.tg.off{background:#ccc}
+.tgt{width:15px;height:15px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.15s}
+.tg.on .tgt{transform:translateX(15px)}
+.cd{width:7px;height:7px;border-radius:50%;background:#1D9E75;flex-shrink:0}
+.cd.off{background:#ddd}
+.dbs-warn{background:#FFF8E1;border:1px solid #FFD54F;border-radius:8px;padding:10px 13px;font-size:12px;color:#795548;margin-top:8px;line-height:1.5}
+.pnote{font-size:11px;color:#aaa;text-align:center;margin-top:4px}
+
+/* Multi-candidate */
+.cand-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.cand-item{background:#f8f8f8;border:1px solid #e8e8e8;border-radius:8px;padding:12px 14px;position:relative}
+.cand-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.cand-item-title{font-size:12px;font-weight:600;color:#555}
+.cand-remove{font-size:11px;color:#999;cursor:pointer;background:none;border:none;padding:0}
+.cand-remove:hover{color:#e53e3e}
+.add-cand{display:flex;align-items:center;gap:6px;font-size:12px;color:#1D9E75;cursor:pointer;font-weight:600;padding:8px 0;background:none;border:none}
+.add-cand:hover{opacity:0.8}
+
+/* Buttons */
+.bp{width:100%;padding:11px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-top:7px;transition:opacity 0.15s}
+.bp:hover{opacity:0.88}
+.bs{padding:9px 18px;background:transparent;color:#888;border:1px solid #ddd;border-radius:8px;font-size:12px;cursor:pointer}
+.br{display:flex;justify-content:space-between;align-items:center;margin-top:14px;width:100%}
+
+/* Payment */
+.pay-sum{background:#E1F5EE;border-radius:8px;padding:10px 13px;font-size:12px;color:#085041;margin-bottom:12px;line-height:1.5}
+
+/* Confirmation */
+.sc{width:56px;height:56px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.ckm{width:24px;height:24px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center}
+.ckm:after{content:'';display:block;width:9px;height:5px;border-left:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(-45deg);margin-top:-2px}
+.stc{width:100%;border:1px solid #eee;border-radius:10px;overflow:hidden;margin-top:14px}
+.sth{padding:9px 13px;background:#f8f8f8;font-size:11px;font-weight:600;color:#888;display:flex;justify-content:space-between;border-bottom:1px solid #f0f0f0}
+.str{padding:10px 13px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f5f5f5}
+.str:last-child{border-bottom:none}
+.stn{font-size:12px;color:#111}
+.stp{font-size:11px;padding:2px 9px;border-radius:9px;font-weight:500}
+.pend{background:#FAEEDA;color:#633806}
+.bvbox{background:#f8f8f8;border:1px dashed #ccc;border-radius:8px;padding:12px 13px;margin-top:13px;width:100%;text-align:left}
+.bvt{font-size:12px;font-weight:600;color:#111;margin-bottom:3px}
+.bvs{font-size:11px;color:#666;line-height:1.5;margin-bottom:8px}
+.bvb{padding:6px 14px;font-size:11px;font-weight:600;background:#1D9E75;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-right:6px}
+.bvb2{padding:6px 14px;font-size:11px;background:transparent;color:#888;border:1px solid #ddd;border-radius:6px;cursor:pointer}
+.conf-actions{display:flex;gap:10px;margin-top:14px;width:100%}
+.dash-btn{flex:1;padding:10px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.another-btn{flex:1;padding:10px;background:transparent;color:#1D9E75;border:2px solid #1D9E75;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+
+/* Dashboard */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.stat-c{background:#f8f8f8;border-radius:8px;padding:12px}
+.stat-l{font-size:11px;color:#888;margin-bottom:3px}
+.stat-v{font-size:20px;font-weight:700;color:#111}
+</style>
+</head>
+<body>
+<div class="proto-wrap">
+  <div class="proto-label">iChex · SMB Onboarding Prototype v3 · Omar flow</div>
+  <div class="proto-shell">
+    <div class="bb">
+      <div class="bd"><div class="bdo bdo-r"></div><div class="bdo bdo-y"></div><div class="bdo bdo-g"></div></div>
+      <div class="burl" id="ubar">ichex.io</div>
+    </div>
+
+    <!-- SCREEN 1: Landing -->
+    <div class="scr on" id="s1">
+      <div class="nav"><div class="logo">i<b>Chex</b></div><div class="nlk"><span class="nl">Pricing</span><span class="nl">Enterprise</span><span class="nl">Sign in</span></div></div>
+      <div class="bd2 cx">
+        <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;color:#1D9E75;text-transform:uppercase;margin-bottom:10px">Background screening, reimagined</div>
+        <div class="h1">The background check<br>built for how you work</div>
+        <div class="sub" style="max-width:400px">No contracts. No minimums. No sales calls.<br>Get your first check done in minutes.</div>
+        <div class="pg">
+          <div class="pc" onclick="selP(this,'s2','ichex.io/business')"><div class="pi">🏢</div><div class="pt">For my business</div><div class="pd">SMB hiring — pay per check, no contract</div></div>
+          <div class="pc" onclick="selP(this,'sent','ichex.io/enterprise')"><div class="pi">🏛</div><div class="pt">For enterprise teams</div><div class="pd">ATS integrations, compliance, teams</div></div>
+          <div class="pc" onclick="selP(this,'scand','ichex.io/verify-me')"><div class="pi">👤</div><div class="pt">Check myself</div><div class="pd">Own a verified report. Share anywhere.</div></div>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:8px">Trusted by 2,400+ businesses · 60 countries · ISO 27001</div>
+      </div>
+    </div>
+
+    <!-- Stubs for other paths -->
+    <div class="scr" id="sent"><div class="bd2 cx" style="padding-top:60px"><div class="h2">Enterprise flow</div><div class="sub">This prototype demos the SMB flow. Click back.</div><button class="bs" onclick="go('s1','ichex.io')">Back to home</button></div></div>
+    <div class="scr" id="scand"><div class="bd2 cx" style="padding-top:60px"><div class="h2">Candidate self-service</div><div class="sub">This prototype demos the SMB flow. Click back.</div><button class="bs" onclick="go('s1','ichex.io')">Back to home</button></div></div>
+
+    <!-- SCREEN 2: Industry -->
+    <div class="scr" id="s2">
+      <div class="pgb">
+        <div class="ps ac">Industry</div><div class="pl"></div>
+        <div class="ps">Candidate</div><div class="pl"></div>
+        <div class="ps">Package</div><div class="pl"></div>
+        <div class="ps">Account</div><div class="pl"></div>
+        <div class="ps">Payment</div><div class="pl"></div>
+        <div class="ps">Confirm</div>
+      </div>
+      <div class="bd2">
+        <div class="lbar">
+          <div class="lbar-l">Detected location: <strong>United Kingdom</strong> · GBP (£) · UK jurisdiction</div>
+          <span class="lbar-c" onclick="go('sloc','ichex.io/business/location')">Change</span>
+        </div>
+        <div class="h2">What kind of business do you run?</div>
+        <div class="sub">We'll recommend the right checks once we know your industry and where your candidates are based.</div>
+        <input class="si" id="ind-in" placeholder="Type your industry — e.g. cafe, clinic, tech startup..." oninput="srch(this.value)" autocomplete="off">
+        <div class="hid sres" id="sres"></div>
+        <div class="br"><button class="bs" onclick="go('s1','ichex.io')">Back</button></div>
+      </div>
+    </div>
+
+    <!-- SCREEN: Location change -->
+    <div class="scr" id="sloc">
+      <div class="pgb">
+        <div class="ps ac">Industry</div><div class="pl"></div>
+        <div class="ps">Candidate</div><div class="pl"></div>
+        <div class="ps">Package</div><div class="pl"></div>
+        <div class="ps">Account</div><div class="pl"></div>
+        <div class="ps">Payment</div><div class="pl"></div>
+        <div class="ps">Confirm</div>
+      </div>
+      <div class="bd2">
+        <div class="h2">Your location settings</div>
+        <div class="sub">Sets your billing currency. The candidate's country is set separately and determines which checks are available.</div>
+        <div class="fg"><label class="fl">Your business country</label>
+          <select class="fsel"><option>United Kingdom</option><option>United States</option><option>Germany</option><option>France</option><option>Australia</option><option>Canada</option><option>UAE</option></select>
+        </div>
+        <div class="fg"><label class="fl">Preferred currency</label>
+          <select class="fsel"><option>GBP (£)</option><option>USD ($)</option><option>EUR (€)</option><option>AUD (A$)</option><option>CAD (C$)</option></select>
+        </div>
+        <div style="font-size:11px;color:#aaa;line-height:1.5;margin-bottom:4px">Compliance rules are applied based on the candidate's location — not yours.</div>
+        <div class="br"><button class="bs" onclick="go('s2','ichex.io/business')">Cancel</button><button class="bp" style="width:auto;padding:9px 22px" onclick="go('s2','ichex.io/business')">Save</button></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: Candidate details (with multi-candidate support) -->
+    <div class="scr" id="s3">
+      <div class="pgb">
+        <div class="ps dn" onclick="go('s2','ichex.io/business')">Industry</div><div class="pl dn"></div>
+        <div class="ps ac">Candidate</div><div class="pl"></div>
+        <div class="ps">Package</div><div class="pl"></div>
+        <div class="ps">Account</div><div class="pl"></div>
+        <div class="ps">Payment</div><div class="pl"></div>
+        <div class="ps">Confirm</div>
+      </div>
+      <div class="bd2">
+        <div class="h2">Who are you checking?</div>
+        <div class="sub">The candidate's country determines which checks are legally available. Add multiple candidates if needed — each can be from a different location.</div>
+        <div class="cand-list" id="cand-list"></div>
+        <button class="add-cand" onclick="addCand()">+ Add another candidate</button>
+        <div class="br" style="margin-top:16px"><button class="bs" onclick="go('s2','ichex.io/business')">Back</button><button class="bp" style="width:auto;padding:9px 22px" onclick="go('s4','ichex.io/business/package')">See recommended package</button></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: Package -->
+    <div class="scr" id="s4">
+      <div class="pgb">
+        <div class="ps dn" onclick="go('s2','ichex.io/business')">Industry</div><div class="pl dn"></div>
+        <div class="ps dn" onclick="go('s3','ichex.io/business/candidate')">Candidate</div><div class="pl dn"></div>
+        <div class="ps ac">Package</div><div class="pl"></div>
+        <div class="ps">Account</div><div class="pl"></div>
+        <div class="ps">Payment</div><div class="pl"></div>
+        <div class="ps">Confirm</div>
+      </div>
+      <div class="bd2">
+        <div class="pbadge" id="pbadge">Hospitality — Server / Barista · UK candidate</div>
+        <div class="h2">Recommended checks</div>
+        <div class="sub">Built for your industry and candidate location. Toggle checks on or off — price updates live.</div>
+        <div class="pkc">
+          <div class="pkh"><div class="pkt">Your package</div><div class="pkp" id="tot">£18.00</div></div>
+          <div class="pki">
+            <div class="ci"><div class="ck-n"><div class="cd" id="d-rtw"></div>Right to work (UK)</div><div class="tw"><div class="ck-p">£8.00</div><div class="tg on" id="t-rtw" onclick="tog('rtw',8,false)"><div class="tgt"></div></div></div></div>
+            <div class="ci"><div class="ck-n"><div class="cd" id="d-dbs"></div>DBS criminal record</div><div class="tw"><div class="ck-p">£10.00</div><div class="tg on" id="t-dbs" onclick="tog('dbs',10,true)"><div class="tgt"></div></div></div></div>
+            <div class="ci"><div class="ck-n"><div class="cd off" id="d-emp"></div>Employment verification</div><div class="tw"><div class="ck-p">£12.00</div><div class="tg off" id="t-emp" onclick="tog('emp',12,false)"><div class="tgt"></div></div></div></div>
+            <div class="ci"><div class="ck-n"><div class="cd off" id="d-id"></div>Identity verification</div><div class="tw"><div class="ck-p">£6.00</div><div class="tg off" id="t-id" onclick="tog('id',6,false)"><div class="tgt"></div></div></div></div>
+          </div>
+        </div>
+        <div id="dbs-warn" class="hid dbs-warn">DBS checks require business verification — takes 2 minutes. You can complete this after account creation.</div>
+        <div class="pnote">Per candidate · PAYG · No contract · GDPR compliant</div>
+        <div class="br"><button class="bs" onclick="go('s3','ichex.io/business/candidate')">Back</button><button class="bp" style="width:auto;padding:9px 22px" onclick="go('s5','ichex.io/business/account')">Continue</button></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: Account -->
+    <div class="scr" id="s5">
+      <div class="pgb">
+        <div class="ps dn" onclick="go('s2','ichex.io/business')">Industry</div><div class="pl dn"></div>
+        <div class="ps dn" onclick="go('s3','ichex.io/business/candidate')">Candidate</div><div class="pl dn"></div>
+        <div class="ps dn" onclick="go('s4','ichex.io/business/package')">Package</div><div class="pl dn"></div>
+        <div class="ps ac">Account</div><div class="pl"></div>
+        <div class="ps">Payment</div><div class="pl"></div>
+        <div class="ps">Confirm</div>
+      </div>
+      <div class="bd2">
+        <div class="h2">Create your account</div>
+        <div class="sub">Email only to get started. No company details required yet.</div>
+        <div class="fg"><label class="fl">Email address</label><input class="fi" placeholder="omar@hassancafes.co.uk" type="email"></div>
+        <div class="fg"><label class="fl">Password</label><input class="fi" placeholder="Create a password" type="password"></div>
+        <div style="font-size:11px;color:#aaa;line-height:1.5;margin-bottom:4px">By continuing you agree to iChex Terms and Privacy Policy. Data stored under GDPR.</div>
+        <button class="bp" onclick="go('s6','ichex.io/business/payment')">Create account and continue</button>
+        <div style="text-align:center;margin-top:10px"><button class="bs" onclick="go('s4','ichex.io/business/package')">Back</button></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 6: Payment -->
+    <div class="scr" id="s6">
+      <div class="pgb">
+        <div class="ps dn" onclick="go('s2','ichex.io/business')">Industry</div><div class="pl dn"></div>
+        <div class="ps dn" onclick="go('s3','ichex.io/business/candidate')">Candidate</div><div class="pl dn"></div>
+        <div class="ps dn" onclick="go('s4','ichex.io/business/package')">Package</div><div class="pl dn"></div>
+        <div class="ps dn" onclick="go('s5','ichex.io/business/account')">Account</div><div class="pl dn"></div>
+        <div class="ps ac">Payment</div><div class="pl"></div>
+        <div class="ps">Confirm</div>
+      </div>
+      <div class="bd2">
+        <div class="h2">Payment</div>
+        <div class="pay-sum" id="pay-summary">Checking: <strong id="pay-names">1 candidate</strong> · Right to work + DBS criminal record · Total: <strong id="pay-tot">£18.00</strong></div>
+        <div class="fg"><label class="fl">Card number</label><input class="fi" placeholder="4242 4242 4242 4242"></div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Expiry</label><input class="fi" placeholder="MM / YY"></div>
+          <div class="fg"><label class="fl">CVC</label><input class="fi" placeholder="123"></div>
+        </div>
+        <div style="font-size:11px;color:#aaa;line-height:1.5;margin-bottom:4px">Charged once each candidate submits their information. Cancel before submission at no cost.</div>
+        <button class="bp" id="pay-btn" onclick="go('s7','ichex.io/business/confirm')">Pay £18.00 and submit checks</button>
+        <div style="text-align:center;margin-top:10px"><button class="bs" onclick="go('s5','ichex.io/business/account')">Back</button></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 7: Confirmation -->
+    <div class="scr" id="s7">
+      <div class="pgb">
+        <div class="ps dn" onclick="go('s2','ichex.io/business')">Industry</div><div class="pl dn"></div>
+        <div class="ps dn" onclick="go('s3','ichex.io/business/candidate')">Candidate</div><div class="pl dn"></div>
+        <div class="ps dn" onclick="go('s4','ichex.io/business/package')">Package</div><div class="pl dn"></div>
+        <div class="ps dn" onclick="go('s5','ichex.io/business/account')">Account</div><div class="pl dn"></div>
+        <div class="ps dn" onclick="go('s6','ichex.io/business/payment')">Payment</div><div class="pl dn"></div>
+        <div class="ps ac">Confirm</div>
+      </div>
+      <div class="bd2 cx">
+        <div class="sc"><div class="ckm"></div></div>
+        <div class="h2">Checks submitted</div>
+        <div class="sub" style="max-width:360px" id="conf-sub">Your candidate has been sent a secure link. You'll be notified when results are ready — usually within 24 hours.</div>
+        <div class="stc" id="conf-checks" style="width:100%">
+          <div class="sth"><span>Active checks</span><span>Status</span></div>
+        </div>
+        <div class="bvbox" style="width:100%;text-align:left">
+          <div class="bvt">Business verification required for DBS</div>
+          <div class="bvs">DBS checks require verification against Companies House. Takes 2 minutes — unlocks this and all future DBS checks.</div>
+          <button class="bvb" onclick="go('sbv','ichex.io/business/verify')">Verify now</button>
+          <button class="bvb2" onclick="go('sdash','ichex.io/business/dashboard')">Remind me later</button>
+        </div>
+        <div class="conf-actions">
+          <button class="another-btn" onclick="addAnotherCand()">Check another candidate</button>
+          <button class="dash-btn" onclick="go('sdash','ichex.io/business/dashboard')">Go to dashboard</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN: Business verification -->
+    <div class="scr" id="sbv">
+      <div class="bd2">
+        <div class="h2">Verify your business</div>
+        <div class="sub">Required for DBS checks. Verified against Companies House — takes 2 minutes.</div>
+        <div class="fg"><label class="fl">Legal business name</label><input class="fi" placeholder="Hassan Cafes Ltd"></div>
+        <div class="fg"><label class="fl">Company registration number</label><input class="fi" placeholder="12345678"></div>
+        <div class="fg"><label class="fl">Business address</label><input class="fi" placeholder="12 High Street, Manchester, M1 1AA"></div>
+        <div style="font-size:11px;color:#aaa;line-height:1.5;margin-bottom:4px">Verified against Companies House. Not shared with third parties.</div>
+        <button class="bp" onclick="go('sdash','ichex.io/business/dashboard')">Submit verification</button>
+        <div style="text-align:center;margin-top:10px"><button class="bs" onclick="go('s7','ichex.io/business/confirm')">Back</button></div>
+      </div>
+    </div>
+
+    <!-- SCREEN: Dashboard -->
+    <div class="scr" id="sdash">
+      <div class="nav"><div class="logo">i<b>Chex</b></div><div class="nlk"><span class="nl act">Dashboard</span><span class="nl">Checks</span><span class="nl">Billing</span><span class="nl">Settings</span></div></div>
+      <div class="bd2">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
+          <div><div class="h2" style="margin-bottom:2px">Good morning, Omar</div><div style="font-size:12px;color:#888">Hassan Cafes · Manchester, UK · GBP</div></div>
+          <button class="bp" style="width:auto;padding:8px 16px;font-size:12px;margin-top:0" onclick="startNewCheck()">+ New check</button>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-c"><div class="stat-l">Checks this month</div><div class="stat-v" id="dash-total">1</div></div>
+          <div class="stat-c"><div class="stat-l">In progress</div><div class="stat-v" style="color:#BA7517" id="dash-progress">1</div></div>
+          <div class="stat-c"><div class="stat-l">Completed</div><div class="stat-v" style="color:#1D9E75">0</div></div>
+        </div>
+        <div class="stc" id="dash-checks">
+          <div class="sth"><span>Recent checks</span><span>Status</span></div>
+          <div class="str"><div class="stn">Loading...</div></div>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:13px;text-align:center">Business verification pending — <span style="color:#1D9E75;cursor:pointer;font-weight:600" onclick="go('sbv','ichex.io/business/verify')">complete to activate DBS checks</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var cks={rtw:true,dbs:true,emp:false,id:false};
+var prs={rtw:8,dbs:10,emp:12,id:6};
+var candCount=1;
+var allCands=[];
+var inds=[
+  {q:['cafe','coffee','barista','espresso','latte'],'lbl':'Hospitality — Server / Barista','pre':'Hospitality'},
+  {q:['restaurant','kitchen','chef','food','dining','pub','bar','bistro'],'lbl':'Hospitality — Kitchen / FOH Staff','pre':'Hospitality'},
+  {q:['retail','shop','store','cashier','boutique','sales'],'lbl':'Retail — Sales Assistant','pre':'Retail'},
+  {q:['clinic','doctor','nurse','health','medical','care','hospital','pharmacy'],'lbl':'Healthcare — Clinical Staff','pre':'Healthcare'},
+  {q:['tech','software','developer','engineer','startup','saas','coding'],'lbl':'Technology — Engineering','pre':'Technology'},
+  {q:['security','guard','officer','patrol','bouncer'],'lbl':'Security — Officer','pre':'Security'},
+  {q:['logistics','driver','delivery','warehouse','courier'],'lbl':'Logistics — Driver / Warehouse','pre':'Logistics'},
+  {q:['school','teacher','education','tutor','childcare','nursery'],'lbl':'Education — Teaching / Childcare','pre':'Education'},
+];
+var candNotes={
+  uk:'UK-based candidate — checks run against UK databases. Right to work and DBS criminal record available.',
+  pk:'Pakistan-based candidate — identity documents required. Employment verification conducted manually. No DBS available; police certificate required for criminal record.',
+  in:'India-based candidate — identity and education verification available. Criminal check via Indian court records.',
+  us:'US-based candidate — FCRA rules apply. Federal and county criminal checks available. SSN trace required.',
+  ng:'Nigeria-based candidate — identity and manual employment check available. Criminal check via INTERPOL watchlist.',
+  other:'Candidate location not fully supported for automated checks. Identity documents required — our compliance team will guide you.'
+};
+
+function initCandList(){
+  var list=document.getElementById('cand-list');
+  list.innerHTML='';
+  candCount=1;
+  list.appendChild(makeCandForm(1));
+}
+
+function makeCandForm(n){
+  var div=document.createElement('div');
+  div.className='cand-item';
+  div.id='cand-'+n;
+  div.innerHTML=
+    '<div class="cand-item-header">'+
+      '<span class="cand-item-title">Candidate '+n+'</span>'+
+      (n>1?'<button class="cand-remove" onclick="removeCand('+n+')">Remove</button>':'')+
+    '</div>'+
+    '<div class="fr" style="margin-bottom:10px">'+
+      '<div class="fg" style="margin-bottom:0"><label class="fl">First name</label><input class="fi" placeholder="First name" id="fn-'+n+'"></div>'+
+      '<div class="fg" style="margin-bottom:0"><label class="fl">Last name</label><input class="fi" placeholder="Last name" id="ln-'+n+'"></div>'+
+    '</div>'+
+    '<div class="fg"><label class="fl">Email address</label><input class="fi" placeholder="email@example.com" type="email" id="em-'+n+'"></div>'+
+    '<div class="fg" style="margin-bottom:6px"><label class="fl">Candidate country</label>'+
+      '<select class="fsel" id="cc-'+n+'" onchange="updNote('+n+',this.value)">'+
+        '<option value="uk">United Kingdom</option>'+
+        '<option value="pk">Pakistan</option>'+
+        '<option value="in">India</option>'+
+        '<option value="us">United States</option>'+
+        '<option value="ng">Nigeria</option>'+
+        '<option value="other">Other</option>'+
+      '</select>'+
+    '</div>'+
+    '<div class="cn" id="note-'+n+'">'+candNotes['uk']+'</div>';
+  return div;
+}
+
+function addCand(){
+  candCount++;
+  var list=document.getElementById('cand-list');
+  list.appendChild(makeCandForm(candCount));
+  updatePayment();
+}
+
+function removeCand(n){
+  var el=document.getElementById('cand-'+n);
+  if(el)el.remove();
+  updatePayment();
+}
+
+function updNote(n,v){
+  var el=document.getElementById('note-'+n);
+  if(el)el.textContent=candNotes[v]||candNotes['other'];
+}
+
+function updatePayment(){
+  var items=document.querySelectorAll('.cand-item');
+  var count=items.length;
+  var tot=0;Object.keys(cks).forEach(function(x){if(cks[x])tot+=prs[x];});
+  var total=tot*count;
+  var ts='£'+total.toFixed(2);
+  var el=document.getElementById('tot');if(el)el.textContent='£'+tot.toFixed(2);
+  var pt=document.getElementById('pay-tot');if(pt)pt.textContent=ts;
+  var pb=document.getElementById('pay-btn');
+  if(pb)pb.textContent='Pay '+ts+' and submit check'+(count>1?'s':'');
+  var pn=document.getElementById('pay-names');
+  if(pn)pn.textContent=count+' candidate'+(count>1?'s':'');
+}
+
+function buildConfirmation(){
+  var items=document.querySelectorAll('.cand-item');
+  var checks=document.getElementById('conf-checks');
+  var sub=document.getElementById('conf-sub');
+  var n=items.length;
+  sub.textContent=(n>1?'Your '+n+' candidates have':'Your candidate has')+' been sent secure links. You\'ll be notified when results are ready — usually within 24 hours.';
+  checks.innerHTML='<div class="sth"><span>Active checks</span><span>Status</span></div>';
+  var dashChecks=document.getElementById('dash-checks');
+  dashChecks.innerHTML='<div class="sth"><span>Recent checks</span><span>Status</span></div>';
+  document.getElementById('dash-total').textContent=n;
+  document.getElementById('dash-progress').textContent=n;
+  items.forEach(function(item,i){
+    var fn=document.getElementById('fn-'+(i+1));
+    var ln=document.getElementById('ln-'+(i+1));
+    var name=(fn&&fn.value?fn.value:'Candidate')+' '+(ln&&ln.value?ln.value:(i+1));
+    var row1='<div class="str"><div class="stn">'+name+' — Right to work</div><div class="stp pend">In progress</div></div>';
+    var row2='<div class="str"><div class="stn">'+name+' — DBS criminal</div><div class="stp pend">In progress</div></div>';
+    checks.innerHTML+=row1+row2;
+    dashChecks.innerHTML+='<div class="str"><div class="stn">'+name+' — Right to work + DBS</div><div class="stp pend">In progress</div></div>';
+  });
+}
+
+function srch(v){
+  var r=document.getElementById('sres');
+  if(!v||v.length<2){r.classList.add('hid');return;}
+  var val=v.toLowerCase();
+  var m=inds.filter(function(i){return i.q.some(function(k){return k.includes(val)||val.includes(k);});});
+  if(!m.length){
+    r.innerHTML='<div class="sr" onclick="selI(\'Custom\',\'Custom — General role\')"><span>Other / not listed</span><span class="rt">Custom package</span></div>';
+    r.classList.remove('hid');return;
+  }
+  r.innerHTML=m.slice(0,4).map(function(x){
+    return '<div class="sr" onclick="selI(\''+x.pre+'\',\''+x.lbl+'\')"><span>'+x.lbl+'</span><span class="rt">'+x.pre+' preset</span></div>';
+  }).join('');
+  r.classList.remove('hid');
+}
+
+function selI(pre,lbl){
+  document.getElementById('pbadge').textContent=lbl+' · UK candidate';
+  document.getElementById('sres').classList.add('hid');
+  initCandList();
+  go('s3','ichex.io/business/candidate');
+}
+
+function tog(k,p,isDbs){
+  cks[k]=!cks[k];
+  var t=document.getElementById('t-'+k);
+  var d=document.getElementById('d-'+k);
+  if(cks[k]){t.classList.remove('off');t.classList.add('on');d.classList.remove('off');}
+  else{t.classList.add('off');t.classList.remove('on');d.classList.add('off');}
+  if(isDbs){
+    var w=document.getElementById('dbs-warn');
+    if(w){if(cks[k])w.classList.remove('hid');else w.classList.add('hid');}
+  }
+  updatePayment();
+}
+
+function go(id,url){
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
+  var el=document.getElementById(id);if(el)el.classList.add('on');
+  document.getElementById('ubar').textContent=url;
+  window.scrollTo(0,0);
+}
+
+function selP(el,sc,url){
+  document.querySelectorAll('.pc').forEach(function(c){c.classList.remove('sel');});
+  el.classList.add('sel');
+  setTimeout(function(){go(sc,url);},180);
+}
+
+function addAnotherCand(){
+  initCandList();
+  go('s3','ichex.io/business/candidate');
+}
+
+function startNewCheck(){
+  initCandList();
+  go('s3','ichex.io/business/candidate');
+}
+
+// Override go to s7 to build confirmation first
+var _origGo=go;
+document.querySelector('#s6 .bp').addEventListener('click',function(){
+  buildConfirmation();
+},true);
+
+initCandList();
+</script>
+</body>
+</html>
